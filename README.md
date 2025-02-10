@@ -7,9 +7,13 @@ This project aims to create a chatbot helper AI that writes cover letters based 
 
 - [ ] Get basic chat functionality using [Gemeni API]( https://ai.google.dev/gemini-api/docs/ )
 - [ ] Add more possible LLM's (I might setup my own for example)
-- [ ] Create a PDF reader/processing engine in [LlamaIndex]( https://github.com/run-llama/llama_index )
-- [ ] Create a webscraper to read job postings using [crawl4ai]( https://github.com/unclecode/crawl4ai )
+- [ ] ~~Create a PDF reader/processing engine in [LlamaIndex]( https://github.com/run-llama/llama_index )~~
+- [ ] Add some way to parse PDF's
+    - [ ] Initially, use Gemeni API
+    - [ ] Make it actually save the information, so each PDF is only parsed once, even if reused.
+- [X] Create a webscraper to read job postings using [crawl4ai]( https://github.com/unclecode/crawl4ai )
 - [ ] Set up a database with the following features:
     - [ ] Keep track of chat logs
     - [ ] Keep track of uploaded PDF's and their parsed output, to reduce processing costs
 - [ ] Expose endpoints for chatting using [FastAPI](https://github.com/fastapi/fastapi)
+- [ ] Turn everything into an agent so that you do not need to force prompts in the front-end
