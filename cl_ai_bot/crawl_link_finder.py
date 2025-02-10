@@ -22,7 +22,8 @@ class LinksModel(BaseModel):
 
 
 async def get_about_url_using_llm(
-    provider: str, api_token: str = None, extra_headers: dict[str, str] = None
+        url: str, provider: str, api_token: str = None,
+        extra_headers: dict[str, str] = None
 ):
     print(f"\n--- Extracting Structured Data with {provider} ---")
 
@@ -41,21 +42,24 @@ async def get_about_url_using_llm(
             api_token=api_token,
             schema=LinksModel.model_json_schema(),
             extraction_type="schema",
-            instruction="From the crawled content, extract\
+            instruction="From the crawled content, extract \
                     a list of names of buttons and their urls on the page, \
                     where there's a decent chance that the new page would \
                     contain information about the company and most \
                     importantly their values.These shall be unique, so no \
                     duplicate entires in the list. \
-                    Make sure the URL's are properly formatted.",
+                    Make sure the URL's are properly formatted and that \
+                    there are no remnants of HTML tags and structure left \
+                    in the link. For example, make sure the link does NOT \
+                    look like this \
+                    https://www.appliedintuition.com/%3C/careers%3E'",
             extra_args=extra_args,
         ),
     )
 
-    in_url = "https://www.appliedintuition.com/"
     async with AsyncWebCrawler(config=browser_config) as crawler:
         result = await crawler.arun(
-            url=in_url,
+            url=url,
             config=crawler_config
         )
         result._get_value
@@ -64,7 +68,7 @@ async def get_about_url_using_llm(
                 result.extracted_content
                 )[0]
         for link in links_model.list_of_links:
-            out.append(str(link.url))
+            out.append(link)
         return out
 
 if __name__ == "__main__":
