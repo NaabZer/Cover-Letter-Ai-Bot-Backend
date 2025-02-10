@@ -8,14 +8,17 @@ from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 
 class LinkModel(BaseModel):
-    link: str = Field(..., description="Name of the link to a page that could contain information about the company")
-    url: HttpUrl = Field(..., description="URL of the link to a page that could contain information about the company")
+    link: str = Field(..., description="Name of the link to a page that could \
+            contain information about the company")
+    url: HttpUrl = Field(..., description="URL of the link to a page that \
+            could contain information about the company")
 
     __hash__ = object.__hash__
 
 
 class LinksModel(BaseModel):
-    list_of_links: Set[LinkModel] = Field(..., description="A list of links on the page that could contain information about the company")
+    list_of_links: Set[LinkModel] = Field(..., description="A list of links \
+            on the page that could contain information about the company")
 
 
 async def get_about_url_using_llm(
@@ -39,9 +42,11 @@ async def get_about_url_using_llm(
             schema=LinksModel.model_json_schema(),
             extraction_type="schema",
             instruction="From the crawled content, extract\
-                    a list of names of buttons and their urls on the page, where there's a decent chance\
-                    that the new page would contain information about the company and most importantly their values.\
-                    These shall be unique, so no duplicate entires in the list.\
+                    a list of names of buttons and their urls on the page, \
+                    where there's a decent chance that the new page would \
+                    contain information about the company and most \
+                    importantly their values.These shall be unique, so no \
+                    duplicate entires in the list. \
                     Make sure the URL's are properly formatted.",
             extra_args=extra_args,
         ),
@@ -55,7 +60,9 @@ async def get_about_url_using_llm(
         )
         result._get_value
         out = []
-        links_model = TypeAdapter(List[LinksModel]).validate_json(result.extracted_content)[0]
+        links_model = TypeAdapter(List[LinksModel]).validate_json(
+                result.extracted_content
+                )[0]
         for link in links_model.list_of_links:
             out.append(str(link.url))
         return out

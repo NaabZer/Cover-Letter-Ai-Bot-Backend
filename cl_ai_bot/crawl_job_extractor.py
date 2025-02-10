@@ -2,7 +2,7 @@ import os
 import asyncio
 from crawl_link_finder import get_about_url_using_llm
 from typing import List
-from pydantic import BaseModel, Field 
+from pydantic import BaseModel, Field
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode
 from crawl4ai.async_configs import BrowserConfig
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
@@ -10,18 +10,22 @@ from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 class SkillModel(BaseModel):
     skill: str = Field(..., description="The name of the desired skill")
-    occurance: int = Field(..., description="The number of times this skill is referenced")
+    occurance: int = Field(..., description="The number of times this skill \
+            is referenced")
 
 
 class ValueModel(BaseModel):
     value: str = Field(..., description="The name of the company value")
-    occurance: int = Field(..., description="The number of times this value is referenced")
+    occurance: int = Field(..., description="The number of times this value \
+            is referenced")
 
 
 class CompanyModel(BaseModel):
     about: str = Field(..., description="Information about the company")
-    list_of_soft_skills: List[SkillModel] = Field(..., description="List of soft skills mentioned in the web page")
-    list_of_values: List[ValueModel] = Field(..., description="List of company values mentioned in the web page")
+    list_of_soft_skills: List[SkillModel] = Field(..., description="List of \
+            soft skills mentioned in the web page")
+    list_of_values: List[ValueModel] = Field(..., description="List of \
+            company values mentioned in the web page")
 
 
 class JobPostingModel(BaseModel):
@@ -33,8 +37,10 @@ class JobPostingModel(BaseModel):
                          posting the job position")
     job_description: str = Field(...,
                                  description="Description of the job position")
-    list_of_skills: List[SkillModel] = Field(..., description="List of skills mentioned in the job position")
-    list_of_values: List[ValueModel] = Field(..., description="List of company values mentioned in the job position")
+    list_of_skills: List[SkillModel] = Field(..., description="List of skills \
+            mentioned in the job position")
+    list_of_values: List[ValueModel] = Field(..., description="List of \
+            company values mentioned in the job position")
 
 
 async def get_company_info_using_llm(
@@ -58,11 +64,12 @@ async def get_company_info_using_llm(
             api_token=api_token,
             schema=CompanyModel.model_json_schema(),
             extraction_type="schema",
-            instruction="From the crawled content, extract\
-                    information about a company profile. We want information that are related to software engineering jobs.\
-                    Write a text what the company is about.'\
-                    Also generate a list of soft skills that are mentioned in the page.\
-                    Also generate a list of company values",
+            instruction="From the crawled content, extract \
+                    information about a company profile. We want information \
+                    that are related to software engineering jobs. \
+                    Write a text what the company is about. \
+                    Also generate a list of soft skills that are mentioned \
+                    in the page. Also generate a list of company values",
             extra_args=extra_args,
         ),
     )
@@ -98,10 +105,13 @@ async def get_job_info_using_llm(
             schema=JobPostingModel.model_json_schema(),
             extraction_type="schema",
             instruction="From the crawled content, extract\
-                    information about a job posting. The job posting for some domain within software engineering.\
-                    Separate it into: position, company and job description and information about the company.\
-                    Also generate a list of both hard and soft skills that are mentioned in the page, related to software engineering.\
-                    Also generate a list of company values",
+                    information about a job posting. The job posting for some \
+                    domain within software engineering. \
+                    Separate it into: position, company and job description \
+                    and information about the company.\
+                    Also generate a list of both hard and soft skills that \
+                    are mentioned in the page, related to software \
+                    engineering. Also generate a list of company values",
             extra_args=extra_args,
         ),
     )
