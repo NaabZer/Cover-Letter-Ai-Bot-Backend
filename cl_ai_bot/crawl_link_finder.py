@@ -69,6 +69,7 @@ async def get_about_url_using_llm(
                 )[0]
         for link in links_model.list_of_links:
             out.append(link)
+        out.append(LinkModel(link="home", url=url))
         return out
 
 if __name__ == "__main__":

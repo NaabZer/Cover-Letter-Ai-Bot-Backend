@@ -1,5 +1,6 @@
 import os
 import asyncio
+import json
 from crawl_link_finder import get_about_url_using_llm
 from typing import List
 from pydantic import BaseModel, Field, TypeAdapter
@@ -12,49 +13,60 @@ from crawl4ai.extraction_strategy import LLMExtractionStrategy
 
 class SkillModel(BaseModel):
     skill: str = Field(..., description="The name of the desired skill")
-    occurance: int = Field(..., description="The number of times this skill \
-            is referenced")
+    occurance: int = Field(..., description="The number of times this skill "
+                           "is referenced")
 
 
 class ValueModel(BaseModel):
     value: str = Field(..., description="The name of the company value")
-    occurance: int = Field(..., description="The number of times this value \
-            is referenced")
+    occurance: int = Field(..., description="The number of times this value "
+                           "is referenced")
 
 
 class CompanyAboutModel(BaseModel):
     page_title: str = Field(..., description="Title of the web page")
     about: str = Field(..., description="Information about the company")
-    soft_skills: List[SkillModel] = Field(..., description="List of \
-            soft skills mentioned in the web page")
-    values: List[ValueModel] = Field(..., description="List of \
-            company values mentioned in the web page")
+    soft_skills: List[SkillModel] = Field(..., description="List of "
+                                          "soft skills mentioned in "
+                                          "the web page")
+    values: List[ValueModel] = Field(..., description="List of "
+                                     "company values mentioned in "
+                                     "the web page")
 
 
 class CompanyAboutPageModel(BaseModel):
-    page_title: str
-    about: str
+    page_title: str = Field(..., description="Name of webpage the "
+                            "information is taken from")
+    about: str = Field(..., description="Information about the company "
+                       "taken from the webpage")
 
 
 class CompanyAboutOutputModel(BaseModel):
     pages: List[CompanyAboutPageModel]
-    soft_skills: List[SkillModel]
-    values: List[ValueModel]
+    soft_skills: List[SkillModel] = Field(..., description="List of soft "
+                                          "skills and their count, as "
+                                          "found in the web scrapings")
+    values: List[ValueModel] = Field(..., description="List of values of the "
+                                     "company, as found in the web scrapings")
 
 
 class JobPostingModel(BaseModel):
     title: str = Field(...,
                        description="Name of the title of the job position")
-    company: str = Field(..., description="Name of the company\
-                         posting the job position")
-    about: str = Field(..., description="Information about the company\
-                         posting the job position")
+    company: str = Field(..., description="Name of the company "
+                         "posting the job position")
+    about: str = Field(..., description="Information about the company "
+                       "posting the job position")
     job_description: str = Field(...,
-                                 description="Description of the job position")
-    list_of_skills: List[SkillModel] = Field(..., description="List of skills \
-            mentioned in the job position")
-    list_of_values: List[ValueModel] = Field(..., description="List of \
-            company values mentioned in the job position")
+                                 description="Description, responsiblilities "
+                                 "and what will be done in the job position")
+    job_requirements: str = Field(..., description="Requirements and nice to "
+                                  "haves for the job position")
+    list_of_skills: List[SkillModel] = Field(..., description="List of skills "
+                                             "mentioned in the job position")
+    list_of_values: List[ValueModel] = Field(..., description="List of "
+                                             "company values mentioned in "
+                                             "the job position")
 
 
 class JobPostingOutputModel(BaseModel):
@@ -75,16 +87,19 @@ async def get_company_info_using_llm(
     if extra_headers:
         extra_args["extra_headers"] = extra_headers
 
-    instruction = "From the crawled content, extract \
-            information about a company profile from their website in \
-            {lang}. This information will be parsed by an LLM, so extract \
-            as much information as possible that are relevant \
-            to get an understanding of the purpose and values of a company. \
-            Do not summarize it, and make sure the information would be \
-            easily parsed by an LLM model. Put this information in the about \
-            part of the output schema. \
-            Also generate a list of soft skills and a list of company values \
-            that can be infered from the page."
+    instruction = ("From the crawled content, extract "
+                   "information about a company profile from their website. "
+                   "This information will be parsed by an LLM, so extract "
+                   "as much information as possible that are relevant "
+                   "to get an understanding of the purpose and values of a "
+                   "company. "
+                   "Do not summarize it, and make sure the information would "
+                   "be easily parsed by an LLM model. Put this information in "
+                   "the about part of the output schema. "
+                   "Also generate a list of soft skills and a list of company "
+                   "values that can be infered from the page. "
+                   f"If the web page is not in {lang}, "
+                   f"translate it into {lang}")
 
     if title:
         instruction += f"""Make sure the information, skills and values \
@@ -133,8 +148,8 @@ async def get_job_info_using_llm(
             api_token=api_token,
             schema=JobPostingModel.model_json_schema(),
             extraction_type="schema",
-            instruction=f"""From the crawled content, extract \
-                    information about a job posting in {lang}. The job \
+            instruction="""From the crawled content, extract \
+                    information about a job posting. The job \
                     posting is for some domain within software engineering. \
                     Separate it into: position, company and job description \
                     and information about the company.\
@@ -243,12 +258,14 @@ if __name__ == "__main__":
     #     )
     # )
 
-    job_url = "https://boards.greenhouse.io/appliedintuition/jobs/4330203005?gh_jid=4330203005"
-    home_url = "https://www.appliedintuition.com/"
+    job_url = "https://www.tokyodev.com/companies/recursive/jobs/machine-learning-engineer"
+    home_url = "https://recursiveai.co.jp/"
 
     job_info = get_job_company_info_using_llm(
             job_url, homepage_url=home_url,
             provider="gemini/gemini-2.0-flash",
             api_token=os.getenv("GEMENI_API_KEY")
             )
-    print(job_info)
+    print(json.dumps(job_info.model_json_schema(), indent=2))
+    print()
+    print(job_info.model_dump_json(indent=2))
