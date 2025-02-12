@@ -3,7 +3,7 @@ import asyncio
 import json
 from crawl_link_finder import get_about_url_using_llm
 from typing import List
-from pydantic import BaseModel, Field, TypeAdapter
+from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 from crawl4ai import AsyncWebCrawler, CrawlerRunConfig, CacheMode
 from crawl4ai.async_configs import BrowserConfig
 from crawl4ai.extraction_strategy import LLMExtractionStrategy
@@ -199,18 +199,31 @@ def get_job_company_info_using_llm(
 
         about_info_list = asyncio.run(
             get_company_info_using_llm(
-                urls=links,
+                urls=links[:2],
                 title=job_info_obj.title,
                 provider=provider,
                 api_token=api_token
             )
         )
 
-        #  The string [] is 2 characters, therefore len > 2 check
-        about_info_obj_list = [TypeAdapter(
-            List[CompanyAboutModel]).validate_json(about_info)[0]
-                               for about_info in about_info_list
-                               if len(about_info) > 2]
+        about_info_obj_list = []
+        for about_info in about_info_list:
+            if type(about_info) is CompanyAboutModel:
+                about_info_obj_list.append(about_info)
+            else:
+                print("===============================")
+                print(about_info)
+                print(type(about_info))
+                try:
+                    obj = TypeAdapter(
+                            List[CompanyAboutModel]
+                            ).validate_json(about_info)[0]
+                    about_info_obj_list.append(obj)
+                except ValidationError as e:
+                    print(e.json())
+
+        print("-------")
+
         about_list = []
         skill_map = {}
         value_map = {}
@@ -258,8 +271,8 @@ if __name__ == "__main__":
     #     )
     # )
 
-    job_url = "https://www.tokyodev.com/companies/recursive/jobs/machine-learning-engineer"
-    home_url = "https://recursiveai.co.jp/"
+    job_url = ""
+    home_url = ""
 
     job_info = get_job_company_info_using_llm(
             job_url, homepage_url=home_url,
